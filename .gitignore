@@ -1,0 +1,17 @@
+artifacts/decompiled/*
+.venv-native/*
+tools/vendor/*
+artifacts/hardware/*
+node_modules/
+app/dist/
+.impeccable/review/
+.impeccable/questions/
+artifacts/extracted/
+*.apk
+*.apks
+*.so
+__pycache__/
+*.pyc
+.env
+.env.*
+*.log

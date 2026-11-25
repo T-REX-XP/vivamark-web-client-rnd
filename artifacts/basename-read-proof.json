@@ -1,0 +1,20 @@
+{
+  "time_utc": "2026-11-23T12:06:00.968863+00:00",
+  "action": "fixed-read-only-existing-image",
+  "advertising_candidates": 1,
+  "seen_count": 49,
+  "resource_writes": false,
+  "fixed_path": "TEST.RES",
+  "authenticated": true,
+  "image_read": {
+    "path": "TEST.RES",
+    "dev_handler": 3,
+    "offset": 0,
+    "started": false,
+    "verified": false,
+    "start_status": 1,
+    "start_data_hex": "02"
+  },
+  "error": "ValueError: Named read status 1",
+  "private_transcript_sha256": "c3c5b7aaf262bfd240e7832c4e123cb47587ae1ef3fbe96e3c401db89d22d0cb"
+}

@@ -1,0 +1,21 @@
+{
+  "source": "Physical VivaMark read-only probe",
+  "captured_at_utc": "2026-11-23T11:33:17.478428+00:00",
+  "private_transcript_sha256": "e6a4a401f9f6f483e42baed5ed2f5882c302ed587dce638d1d370d5a4f0109c2",
+  "target_attributes_sanitized": {
+    "0": "20",
+    "5": "0001",
+    "6": "0c",
+    "7": "1b34",
+    "8": "000101",
+    "9": "000000",
+    "10": "01350056",
+    "12": "6a6c5f7638",
+    "13": "0110021c",
+    "19": "3404",
+    "21": "00000007"
+  },
+  "external_flash_response_hex": "00800000008000000100000001000010000457303032010001680168",
+  "free_space_response_hex": "0000000e18",
+  "note": "MAC, license, authKey and unique device attributes intentionally omitted. Capability/read-only evidence only."
+}

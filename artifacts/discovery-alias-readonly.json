@@ -1,0 +1,23 @@
+{
+  "time_utc": "2026-11-25T14:29:29.115041+00:00",
+  "action": "retained-identity-alias-authenticated-readonly",
+  "resource_writes": false,
+  "identity_matches": 1,
+  "advertised_name": "D40(BLE)",
+  "authenticated": true,
+  "capabilities": [
+    {
+      "opcode": 214,
+      "sequence": 1,
+      "status": 0,
+      "data_hex": "00800000008000000100000001000010000457303032010001680168"
+    },
+    {
+      "opcode": 26,
+      "sequence": 2,
+      "status": 0,
+      "data_hex": "0000000dd4"
+    }
+  ],
+  "private_transcript_sha256": "81931c5d4acc2384b4fbce85b3aef2c2ae75d96ca5274e0a6f9fa000cbe562e3"
+}

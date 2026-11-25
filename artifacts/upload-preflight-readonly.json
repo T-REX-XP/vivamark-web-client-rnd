@@ -1,0 +1,33 @@
+{
+  "time_utc": "2026-11-23T11:54:08.042922+00:00",
+  "action": "fixed-read-only-upload-prerequisites",
+  "advertising_candidates": 1,
+  "device_writes": "Only raw authentication and exact read-only RCSP queries; no resource/settings writes",
+  "authenticated": true,
+  "responses": [
+    {
+      "opcode": 214,
+      "sequence": 1,
+      "status": 0,
+      "data_hex": "00800000008000000100000001000010000457303032010001680168"
+    },
+    {
+      "opcode": 26,
+      "sequence": 2,
+      "status": 0,
+      "data_hex": "0000000e18"
+    },
+    {
+      "opcode": 7,
+      "sequence": 3,
+      "status": 0,
+      "data_hex": "ff1602080000000000000000000000000000000300000000"
+    },
+    {
+      "opcode": 26,
+      "sequence": 4,
+      "status": 0,
+      "data_hex": "ff002f544553542e524553ef"
+    }
+  ]
+}

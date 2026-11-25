@@ -1,0 +1,28 @@
+{
+  "name": "vivamark-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun app/server.ts",
+    "start": "bun app/server.ts",
+    "build": "bun app/build.ts",
+    "preview:dist": "bun app/preview.ts",
+    "validate:static": "bun tools/validate-static.ts",
+    "test": "bun tools/test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "gifuct-js": "^2.1.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "bun": "1.4.5",
+    "fake-indexeddb": "^6.2.8",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "time_utc": "2026-11-23T12:31:56.400705+00:00",
+  "action": "read-only-current-watch-path",
+  "advertising_candidates": 0,
+  "seen_count": 54,
+  "resource_writes": false,
+  "error": "Need exactly one advertising VivaMark; no connection attempted",
+  "responses": [],
+  "private_transcript_sha256": "d91de6f78e8350e7a34a98cdb8a535f28d4e50351565e59aa241454ecb8be289"
+}
