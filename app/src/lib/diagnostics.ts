@@ -7,6 +7,15 @@ import {encodeImageRes} from '../../../reference/image-res.mjs';
 import type {UploadChannel,UploadOptions} from './image-upload';
 export const UUIDS = { service: '0000ae00-0000-1000-8000-00805f9b34fb', write: '0000ae01-0000-1000-8000-00805f9b34fb', notify: '0000ae02-0000-1000-8000-00805f9b34fb' };
 export type Frame = { command: boolean; opcode: number; sequence: number; status?: number; needsResponse?:boolean; xmOpcode?:number; data: Uint8Array; raw: Uint8Array };
+export class RcspCommandError extends Error {
+  readonly opcode:number;readonly status:number;readonly response:Uint8Array;
+  constructor(frame:Frame){
+    const operation=frame.opcode===0x24?' (read image file)':'';
+    const detail=frame.data.length?`; response ${Array.from(frame.data,b=>b.toString(16).padStart(2,'0')).join('')}`:'';
+    super(`RCSP command 0x${frame.opcode.toString(16).padStart(2,'0')}${operation} failed: status ${frame.status}${detail}`);
+    this.name='RcspCommandError';this.opcode=frame.opcode;this.status=frame.status??-1;this.response=frame.data.slice();
+  }
+}
 export type LogEntry = { direction: 'tx' | 'rx' | 'state'; message: string; hex?: string; simulated: boolean; timestamp: string };
 const PASS = Uint8Array.of(2,112,97,115,115);
 const same = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v,i) => v === b[i]);
@@ -137,9 +146,7 @@ export class DiagnosticsClient {
         if (!item) { this.log('state','Ignored unmatched response'); continue; }
         this.pending.delete(key); clearTimeout(item.timer);
         if (frame.status) {
-          const operation=frame.opcode===0x24?' (read image file)':'';
-          const detail=frame.data.length?`; response ${Array.from(frame.data,b=>b.toString(16).padStart(2,'0')).join('')}`:'';
-          item.reject(new Error(`RCSP command 0x${frame.opcode.toString(16).padStart(2,'0')}${operation} failed: status ${frame.status}${detail}`));
+          item.reject(new RcspCommandError(frame));
         } else item.resolve(frame);
       }
     }).catch(error=>{if(generation===this.generation)this.disconnect(error instanceof Error?error:new Error(String(error)));});

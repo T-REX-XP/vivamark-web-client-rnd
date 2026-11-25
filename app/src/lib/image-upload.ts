@@ -1,5 +1,5 @@
 import type {Frame} from './diagnostics';
-import {parseExternalFlash,parseFreeSpace} from './diagnostics';
+import {parseExternalFlash,parseFreeSpace,RcspCommandError} from './diagnostics';
 import {parseTargetUploadCapabilities,parseWatchStorage} from './upload-capabilities';
 import {validateImageResource} from './resource-validation';
 import {readImageResource} from './image-backup';
@@ -55,7 +55,7 @@ export async function uploadImage(channel:UploadChannel,input:Uint8Array,options
   const totalTimer=setTimeout(()=>fail(new Error('Image upload maximum duration exceeded')),maxDuration);
   const state=(value:string)=>{stage=value;try{options.onState?.(value);}catch{}};
   const progress=()=>{try{options.onProgress?.({bytesSent:covered,totalBytes:bytes.length,transmittedBytes,percent:finished?100:Math.min(99,Math.floor(covered*100/bytes.length))});}catch{}};
-  const query=async(opcode:number,data=EMPTY)=>{live();const result=await wait(channel.query(opcode,data));live();if(result.command||result.opcode!==opcode)throw new Error('Mismatched upload query response');if(result.status!==0)throw new Error(`RCSP command 0x${opcode.toString(16)} status ${result.status}`);touch();return result;};
+  const query=async(opcode:number,data=EMPTY)=>{live();const result=await wait(channel.query(opcode,data));live();if(result.command||result.opcode!==opcode)throw new Error('Mismatched upload query response');if(result.status!==0)throw new RcspCommandError(result);touch();return result;};
   let chain=Promise.resolve();
   const handle=async(frame:Frame)=>{
     live();if(!frame.command||![0x1d,0x20,0x1c,0x1e].includes(frame.opcode))return;
@@ -140,9 +140,13 @@ export async function uploadImage(channel:UploadChannel,input:Uint8Array,options
     // Do not send after a device stop/cancel or a lost connection.
     if(mutationStarted&&!deviceStopped&&!disconnected){
       let timer:ReturnType<typeof setTimeout>|undefined;
-      try{await Promise.race([channel.query(0x1e,EMPTY),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Cancel timeout')),500);})]);}catch{}finally{clearTimeout(timer);}
+      // Captured physical responses take up to 1.44s. A 500ms cutoff closed
+      // GATT before cancellation could be acknowledged. Allow one full normal
+      // command timeout, still bounded; never retry resource writes here.
+      try{await Promise.race([channel.query(0x1e,EMPTY),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Cancel timeout')),5000);})]);}catch{}finally{clearTimeout(timer);}
     }
     if(failedStage==='verifying')throw new Error(`Image was transferred, but readback verification failed. ${failed?.message??String(error)}`,{cause:failed??error});
+    if(failedStage==='starting'&&failed instanceof RcspCommandError&&failed.opcode===0x1b)throw new Error(`Badge rejected the transfer start (0x1b, status ${failed.status}). Replacement preparation succeeded, but no image bytes were sent. Switch the badge off and on, then reconnect before retrying.`,{cause:failed});
     throw failed??error;
   }finally{
     clearTimeout(inactivity);clearTimeout(totalTimer);options.signal?.removeEventListener('abort',abort);removeCommand();removeDisconnect();running.delete(channel);

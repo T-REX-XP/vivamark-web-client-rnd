@@ -42,6 +42,24 @@ test('default upload completes on badge confirmation without unsupported file re
  const logs:LogEntry[]=[];const client=new DiagnosticsClient({log:entry=>logs.push(entry)});await client.connectSimulator();logs.length=0;
  try{const result=await client.uploadImageResource(image());expect(result.verified).toBe(false);expect(result.bytesSent).toBe(image().length);expect(client.connected).toBe(true);expect(logs.some(entry=>entry.direction==='tx'&&['0c','24'].includes(entry.hex?.split(' ')[4]??''))).toBe(false);}finally{client.disconnect();}
 });
+
+test('captured empty status-1 start failure preserves its cause and awaits late cancellation before disconnect',async()=>{
+ const client=new DiagnosticsClient();await client.connectSimulator();
+ const transport=(client as any).transport,send=transport.send.bind(transport);let acknowledged=false;
+ const sent:number[]=[];
+ transport.send=async(bytes:Uint8Array)=>{
+  const [frame]=new FrameParser().push(bytes);sent.push(frame.opcode);
+  if(frame.opcode===0x1b){(client as any).receive(encodeFrame(0x1b,frame.sequence,new Uint8Array(),true,1));return;}
+  if(frame.opcode===0x1e){await new Promise(resolve=>setTimeout(resolve,650));expect(client.connected).toBe(true);acknowledged=true;}
+  await send(bytes);
+ };
+ const error=await client.uploadImageResource(image()).catch(error=>error as Error);
+ expect(error).toBeInstanceOf(Error);expect((error as Error).message).toContain('no image bytes were sent');
+ expect((error as Error).cause).toMatchObject({opcode:0x1b,status:1,response:new Uint8Array()});
+ expect(acknowledged).toBe(true);expect(client.connected).toBe(false);
+ expect(sent.filter(opcode=>opcode===0x1b)).toHaveLength(1);expect(sent).not.toContain(1);
+ expect((client as any).pending.size).toBe(0);expect((client as any).commandListeners.size).toBe(0);
+});
 test('exclusive transaction blocks diagnostics and a second upload; disconnect cannot resume writes',async()=>{
  const client=new DiagnosticsClient();await client.connectSimulator();let entered!:()=>void;
  const reached=new Promise<void>(resolve=>{entered=resolve;});const transport=(client as any).transport,send=transport.send.bind(transport);

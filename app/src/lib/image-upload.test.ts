@@ -79,6 +79,21 @@ test('prerequisite failures send no mutating commands',async()=>{
     const d=new Device();alter(d);await expect(uploadImage(d,resource,opts)).rejects.toThrow();expect(d.queries.every(q=>[3,214,7].includes(q.opcode)||(q.opcode===26&&q.data[0]===12))).toBe(true);expect(d.commands.size+d.disconnects.size).toBe(0);
   }
 });
+test('transfer-start rejection sends no image data or retries and waits for a slow cancellation acknowledgement',async()=>{
+  const d=new Device(),original=d.query.bind(d);let cancelled=false;
+  d.query=async(opcode,bytes)=>{
+    if(opcode===0x1e){await new Promise(resolve=>setTimeout(resolve,650));cancelled=true;}
+    const result=await original(opcode,bytes);
+    return opcode===0x1b?{...result,status:1}:result;
+  };
+  // Prevent the fake device from requesting bytes for the rejected start.
+  d.statusOpcode=0x1b;
+  await expect(uploadImage(d,resource,{timeoutMs:2000,maxDurationMs:5000})).rejects.toThrow('no image bytes were sent');
+  expect(cancelled).toBe(true);expect(d.sent).toHaveLength(0);
+  expect(d.queries.filter(q=>q.opcode===0x1b)).toHaveLength(1);
+  expect(d.queries.filter(q=>q.opcode===0x1a&&q.data[0]===2)).toHaveLength(1);
+  expect(d.queries.at(-1)?.opcode).toBe(0x1e);expect(d.commands.size+d.disconnects.size).toBe(0);
+});
 test('invalid/zero/out-of-bounds pull and early successful stop never succeed',async()=>{
   for(const bytes of [Uint8Array.of(0),Uint8Array.of(0,0,0,0,0,0,0),Uint8Array.of(0,0,1,255,255,255,255)]){
     const d=new Device();d.script=async d=>{d.emit(29,bytes);};await expect(uploadImage(d,resource,opts)).rejects.toThrow();expect(d.sent).toHaveLength(0);expect(d.queries.at(-1)?.opcode).toBe(30);expect(d.commands.size+d.disconnects.size).toBe(0);
